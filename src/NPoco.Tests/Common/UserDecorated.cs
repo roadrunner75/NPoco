@@ -14,6 +14,10 @@ namespace NPoco.Tests.Common
         [Column("Name")]
         public string Name { get; set; }
 
+        [Column("Surname")]
+        public string Surname{ get; set; }
+
+
         [Column("Age")]
         public int Age { get; set; }
 
@@ -25,6 +29,16 @@ namespace NPoco.Tests.Common
 
         [Column("is_male")]
         public bool IsMale { get; set; }
+    }
+
+
+    [TableName("Users")]
+    [PrimaryKey("UserId")]
+    [ExplicitColumns]
+    public class UserUlongIdDecorated : UserDecorated
+    {
+        [Column("UserId")]
+        public new ulong UserId { get; set; }
     }
 
     [TableName("Users")]

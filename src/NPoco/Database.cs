@@ -1442,7 +1442,17 @@ namespace NPoco
                 rawvalues.Add(versionValue);
             }
 
-            var result = Execute(sql, rawvalues.ToArray());
+            int result;
+            if (DatabaseType == DatabaseType.PostgreSQL)
+            {
+                // workaround PgSQL for 42P08: inconsistent types deduced for parameter
+                result = Execute(new Sql(true,sql, rawvalues.ToArray()));
+            }
+            else
+            {
+                result = Execute(sql, rawvalues.ToArray());
+            }
+            //var result = Execute(sql, rawvalues.ToArray());
 
             if (result == 0 && !string.IsNullOrEmpty(versionName) && VersionException == VersionExceptionHandling.Exception)
             {

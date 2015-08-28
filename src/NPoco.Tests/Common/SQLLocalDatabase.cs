@@ -87,6 +87,7 @@ namespace NPoco.Tests.Common
                 CREATE TABLE Users(
                     UserId int IDENTITY(1,1) PRIMARY KEY NOT NULL, 
                     Name nvarchar(200) NULL, 
+                    Surname nvarchar(200) NULL, 
                     Age int NULL, 
                     DateOfBirth datetime NULL, 
                     Savings decimal(10,5) NULL,
