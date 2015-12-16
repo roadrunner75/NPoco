@@ -20,6 +20,7 @@ using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using NPoco.Expressions;
 using NPoco.Linq;
@@ -1260,16 +1261,16 @@ namespace NPoco
                                     switch (typeIndex)
                                     {
                                         case 1:
-                                            list1.Add(((Func<IDataReader, T1, T1>) factory)(r, default(T1)));
+                                            list1.Add((T1)((Func<IDataReader, object, object>)factory)(r, default(T1)));
                                             break;
                                         case 2:
-                                            list2.Add(((Func<IDataReader, T2, T2>) factory)(r, default(T2)));
+                                            list2.Add((T2)((Func<IDataReader, object, object>)factory)(r, default(T2)));
                                             break;
                                         case 3:
-                                            list3.Add(((Func<IDataReader, T3, T3>) factory)(r, default(T3)));
+                                            list3.Add((T3)((Func<IDataReader, object, object>)factory)(r, default(T3)));
                                             break;
                                         case 4:
-                                            list4.Add(((Func<IDataReader, T4, T4>) factory)(r, default(T4)));
+                                            list4.Add((T4)((Func<IDataReader, object, object>)factory)(r, default(T4)));
                                             break;
                                     }
                                 }
@@ -1328,7 +1329,7 @@ namespace NPoco
             var index = 0;
             var pd = PocoDataFactory.ForType(typeof (T));
             var primaryKeyValuePairs = ProcessMapper(pd, GetPrimaryKeyValues(pd.TableInfo.PrimaryKey, primaryKey));
-            var sql = string.Format("WHERE {0}", BuildPrimaryKeySql(primaryKeyValuePairs, ref index));
+            var sql = AutoSelectHelper.AddSelectClause(this, typeof(T), string.Format("WHERE {0}", BuildPrimaryKeySql(primaryKeyValuePairs, ref index)));
             var args = primaryKeyValuePairs.Select(x => x.Value).ToArray();
             return new Sql(true, sql, args);
         }
@@ -1774,13 +1775,6 @@ namespace NPoco
             }
             else if (pd.TableInfo.PrimaryKey.Contains(","))
             {
-                foreach (var compositeKey in pd.TableInfo.PrimaryKey.Split(','))
-                {
-                    var keyName = compositeKey.Trim();
-                    var pi = poco.GetType().GetProperty(keyName);
-                    if (pi == null) throw new ArgumentException(string.Format("The object doesn't have a property matching the composite primary key column name '{0}'", compositeKey));
-                }
-
                 return !Exists<T>(poco);
             }
             else
@@ -1949,9 +1943,23 @@ namespace NPoco
 
         internal object ProcessMapper(PocoColumn pc, object value)
         {
-            if (Mapper == null) return value;
-            var converter = Mapper.GetToDbConverter(pc.ColumnType, pc.MemberInfo);
-            return converter != null ? converter(value) : value;
+            var converter = Mapper != null ? Mapper.GetToDbConverter(pc.ColumnType, pc.MemberInfo) : null;
+            return converter != null ? converter(value) : ProcessDefaultMappings(pc, value);
+        }
+
+        internal static bool IsEnum(MemberInfo memberInfo)
+        {
+            var underlyingType = Nullable.GetUnderlyingType(memberInfo.GetMemberInfoType());
+            return memberInfo.GetMemberInfoType().IsEnum || (underlyingType != null && underlyingType.IsEnum);
+        }
+
+        private object ProcessDefaultMappings(PocoColumn pocoColumn, object value)
+        {
+            if (IsEnum(pocoColumn.MemberInfo) && pocoColumn.ColumnType == typeof(string) && value != null)
+            {
+                return value.ToString();
+            }
+            return value;
         }
     }
 }

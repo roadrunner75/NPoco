@@ -13,7 +13,10 @@ namespace NPoco.Tests.DecoratedTests.QueryTests
         [Test]
         public void SingleOrDefaultById()
         {
+            var old = ((Database) Database).EnableAutoSelect;
+            ((Database) Database).EnableAutoSelect = false;
             var user = Database.SingleOrDefaultById<UserDecorated>(1);
+            ((Database)Database).EnableAutoSelect = old;
 
             Assert.NotNull(user);
             AssertUserValues(InMemoryUsers[0], user);
@@ -200,6 +203,15 @@ namespace NPoco.Tests.DecoratedTests.QueryTests
         }
 
         [Test]
+        public void SingleOrDefaultFromStringToMissingEnumThrowsException()
+        {
+            Assert.Throws<Exception>(() =>
+            {
+                Database.SingleOrDefault<UserWithNullableId>("select 'John' nameenum from users u where u.userid = 1");
+            });
+        }
+
+        [Test]
         public void SingleOrDefaultFromIntToByteEnum()
         {
             var user = Database.SingleOrDefault<UserWithNullableId>("select 2 days from users u where u.userid = 1");
@@ -246,6 +258,19 @@ namespace NPoco.Tests.DecoratedTests.QueryTests
             var userExists = Database.Exists<UserDecorated>(100);
 
             Assert.False(userExists);
+        }
+
+        [Test]
+        public void ExistsComposite()
+        {
+            var userExists = Database.Exists<CompositeObjectDecorated>(new
+            {
+                Key1ID = 1,
+                Key2ID = 2,
+                Key3ID = 4
+            });
+
+            Assert.True(userExists);
         }
     }
 }

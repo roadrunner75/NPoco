@@ -45,7 +45,7 @@ namespace NPoco.Tests.Common
                 case 2: // SQL Local DB
                 case 3: // SQL Server
                     TestDatabase = new SQLLocalDatabase();
-                    Database = dbFactory.Build(new Database(TestDatabase.Connection, new SqlServer2008DatabaseType()));
+                    Database = dbFactory.Build(new Database(TestDatabase.Connection, new SqlServer2008DatabaseType() { UseOutputClause = true }));
                     break;
 
                 case 4: // SQL CE
@@ -107,7 +107,8 @@ namespace NPoco.Tests.Common
                     UniqueId = (i%2 != 0 ? Guid.NewGuid() : (Guid?)null),
                     TimeSpan = new TimeSpan(1,1,1),
                     HouseId = i%2==0?(int?)null:InMemoryHouses[i%5].HouseId,
-                    SupervisorId = (i+1)%2==0?(i+1):(int?)null
+                    SupervisorId = (i+1)%2==0?(i+1):(int?)null,
+                    TestEnum = (i+1)%2==0 ? TestEnum.All : TestEnum.None
                 };
                 Database.Insert(user);
                 InMemoryUsers.Add(user);
@@ -145,7 +146,11 @@ namespace NPoco.Tests.Common
     {
         public FluentMappingOverrides()
         {
-            For<User>().Columns(x => x.Column(y => y.IsMale).WithName("is_male"));
+            For<User>().Columns(x =>
+            {
+                x.Column(y => y.IsMale).WithName("is_male");
+                x.Column(y => y.TestEnum).WithDbType<string>();
+            });
             For<Supervisor>().UseMap<SupervisorMap>();
             For<Supervisor>().TableName("users").Columns(x => x.Column(y => y.IsMale).WithName("is_male"));
         }

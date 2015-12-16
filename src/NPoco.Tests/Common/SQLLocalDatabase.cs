@@ -94,7 +94,7 @@ namespace NPoco.Tests.Common
                     Is_Male tinyint,
                     UniqueId uniqueidentifier NULL,
                     TimeSpan time NULL,
-                    TestEnum varchar(10) NULL,
+                    TestEnum nvarchar(10) NULL,
                     HouseId int NULL,
                     SupervisorId int NULL,
                     Version rowversion,
@@ -130,6 +130,14 @@ namespace NPoco.Tests.Common
                     TextData nvarchar(512) NULL, 
                     DateEntered datetime NOT NULL,
                     DateUpdated datetime NULL 
+                );
+            ";
+            cmd.ExecuteNonQuery();
+
+            cmd.CommandText = @"
+                CREATE TABLE GuidFromDb(
+                    Id uniqueidentifier PRIMARY KEY DEFAULT newid(), 
+                    Name nvarchar(30)  
                 );
             ";
             cmd.ExecuteNonQuery();
