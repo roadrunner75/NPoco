@@ -1558,11 +1558,11 @@ namespace NPoco
                 rawvalues.Add(versionValue);
             }
 
-            int result;
+            TRet result;
             if (DatabaseType == DatabaseType.PostgreSQL)
             {
                 // workaround PgSQL for 42P08: inconsistent types deduced for parameter
-                result = Execute(new Sql(true,sql, rawvalues.ToArray()));
+                result = ExecuteScalar<TRet>(new Sql(true,sql, rawvalues.ToArray()));
                 return result;
             }
             
